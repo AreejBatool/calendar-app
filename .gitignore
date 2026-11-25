@@ -1,4 +1,9 @@
 # npm (dependencies and generated files)
 node_modules/
 package-lock.json
+package.json
 npm-debug.log*
+
+# Local Claude Code / MCP settings
+.mcp.json
+.claude/settings.json
