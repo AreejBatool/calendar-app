@@ -78,3 +78,75 @@ Storage: localStorage key `calendarEvents` holds a JSON array of
 - Mobile users tap the whole day cell instead of an 8px dot.
 
 **Verified**: `app.js` passes a syntax check. A manual browser pass is still needed: 5 events on one day, "+2 more", and the 360px tap flow.
+
+---
+
+# Phase 3: Restyle the UI to match the reference screenshot (week view with a sidebar)
+
+The reference is a Google-Calendar-style layout. We copy the **layout and visual style** only. We don't use Google's logo, product name or branding: the app keeps its own name and a generic calendar icon.
+
+- [x] **17. App shell layout**: a top bar with a menu (hamburger) button, an app icon showing today's date, the title "Calendar", a rounded "Today" pill, ‹ › arrows, the period title ("November 2026"), and a Month/Week view dropdown on the right. Below it, a left sidebar and a main panel with rounded corners on a light grey background.
+  - AC: matches the reference structure at 1280px or wider. The menu button shows and hides the sidebar.
+- [x] **18. Sidebar**: a "+ Create" pill button with a shadow that opens the add-event form. A mini month calendar with its own ‹ › arrows, single-letter weekdays and today in a blue circle; clicking a date jumps the main view to it. A "My calendars" section with a colour checkbox per calendar (Personal, Work, Other) that shows or hides those events.
+  - AC: clicking a date in the mini calendar moves the main view to that week or month. Unticking a calendar hides its events in both views. The checkbox state is remembered.
+- [x] **19. Calendar field on events**: add a "Calendar" select (Personal, Work, Other) to the event form, stored as `calendar`. Existing events without it count as Personal. Each calendar has a colour that is used on chips and blocks.
+  - AC: old data still loads, and events show their calendar's colour.
+- [x] **20. Week view (new, the default as in the reference)**: day headers with the weekday (SUN…) and a large date number, with today in a filled blue circle. An all-day row for events without a start time. A 24-hour grid with hour labels (1 AM … 11 PM) that scrolls to around 7 AM on load. Timed events are drawn as outlined blocks at their start and end (1 hour if there's no end), showing the title and "9 – 10am". Overlapping events sit side by side. A red current-time line with a dot runs across today's column.
+  - AC: an event from 9:00 to 10:00 lines up with the 9 AM–10 AM rows. Two overlapping events don't cover each other. The red line is at the current time and moves every minute. Clicking an empty slot opens the add form with that date and hour filled in. Clicking a block opens edit.
+- [x] **21. Month view restyle**: the same visual language: a white rounded panel, light grid lines, today as a blue circle, chips in the calendar's colour. All existing behaviour, including "+N more" and the day panel, still works.
+  - AC: switching between Month and Week keeps the current date in view. The chosen view is remembered after a reload.
+- [x] **22. Responsive**: below 900px the sidebar becomes a slide-over opened by the menu button. Below 600px the week view narrows its columns (short weekday labels, smaller text) and the form stays a bottom sheet.
+  - AC: no horizontal page scroll at 360px, 768px or 1280px wide. The week grid still scrolls vertically.
+- [x] **23. Accessibility baseline** (from the a11y review): all text at least 4.5:1 contrast and field borders at least 3:1. Every day, event and "+N more" is a `<button>` with a full accessible name (date, time, calendar); today is marked with `aria-current="date"`. Pop-ups keep focus inside them (`inert` on the page behind) and return focus when they close. Errors are linked with `aria-describedby` and `aria-invalid`, and focus moves to the first invalid field. A visible `:focus-visible` outline. The period title announces changes (`aria-live`). Arrow keys move between days.
+  - AC: the whole app works with the keyboard alone (Tab, Enter, Esc, arrows). Measured contrast ratios are listed in the review.
+- [x] **24. Docs and ship**: update the README (features, data format with `calendar`, screenshot section), add a Phase 3 review here, commit, and push to GitHub.
+  - AC: the README matches the app, and https://github.com/AreejBatool/calendar-app has the new commit.
+
+## Phase 3 Review
+
+**Files changed**
+- `index.html` (rewritten):
+  - A top bar with the menu button, app icon, Today, ‹ ›, the period title (`aria-live`) and the Week/Month select.
+  - A sidebar with Create, the small month calendar and "My calendars".
+  - `#weekView` and `#monthView` containers.
+  - The event form gains a **Calendar** select. Errors now sit outside the labels and are linked with `aria-describedby`.
+- `styles.css` (rewritten):
+  - Colour tokens with measured contrast.
+  - The layout and sidebar, the week grid (hour lines drawn as a repeating gradient, `--hour: 48px`), event blocks, the current-time line, chips and the month grid.
+  - Breakpoints: 900px (sidebar slides in over the page, with a dimmed backdrop) and 600px (compact top bar, dots in month view, bottom-sheet pop-ups).
+- `app.js` (rewritten, about 560 lines):
+  - `renderWeek()` and `layoutDay()` (overlapping events grouped and given side-by-side columns), `updateNowLine()` (every minute), `renderMonth()` (4–6 weeks as needed).
+  - `renderMini()`, `renderCalList()` and the `CALENDARS` list. `calOf()` treats old events as Personal.
+  - `showDialog()` / `hideDialog()` make the page behind `inert` and put focus back afterwards. The grid is rebuilt *before* a pop-up closes, so focus lands on the new button.
+  - Arrow keys move between day buttons.
+  - New validation rule: an end time without a start time.
+  - New localStorage keys `calendarView` and `calendarHidden`.
+- `README.md`: rewritten for the new UI, with screenshots, keyboard table, data format, accessibility notes and changelog.
+- `docs/`: three screenshots (desktop week, desktop month, phone week).
+
+**Measured contrast**
+
+| Pair | Ratio |
+|---|---|
+| muted `#5f6368` on white / on `#f6f8fc` | 6.05 / 5.69 |
+| white on accent `#0b57d0` | 6.39 |
+| white on Work `#137333` | 5.95 |
+| white on Other `#8430ce` | 6.37 |
+| danger `#b3261e` on white | 6.54 |
+| field border `#80868b` on white | 3.68 |
+
+**Verified**
+- Unit check of `fmtRange()`: "9 – 10am", "11am – 12:30pm". Unit check of `layoutDay()`: overlapping events get separate columns, and a freed column is reused.
+- **35 of 35 scripted interaction checks pass** in headless Edge, covering:
+  - The week view: day headers, `aria-current`, the now line, overlap widths.
+  - The edit form: Esc closes it, the page behind is `inert`, focus returns afterwards.
+  - Validation: errors, `aria-invalid`, focus on the first problem, errors clearing live.
+  - Saving with a calendar, and clicking a slot to pre-fill the time.
+  - The Work filter and its saved state.
+  - The month view: cell count, "+2 more", the day panel with all 5 events, focus return.
+  - Arrow keys, prev/next titles, crossing the year boundary, delete, the small month calendar, and the menu collapsing the sidebar.
+- Screenshots at 1440px and 360px. At 360px there is no horizontal scrolling and the title fits.
+- Not run: real phone hardware, and a real screen reader (NVDA or VoiceOver). The slide-over sidebar at under 900px was not screenshotted.
+
+**Design note**: the layout and visual style follow the reference screenshot, but the app keeps its own name and a generic calendar icon. No third-party logos or branding are used.
+
