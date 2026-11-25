@@ -1,0 +1,14 @@
+{
+  "name": "calendar-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Week and month calendar in plain HTML, CSS and JS. Styles are built with Tailwind CSS v4.",
+  "scripts": {
+    "build:css": "tailwindcss -i src/input.css -o styles.css --minify",
+    "watch:css": "tailwindcss -i src/input.css -o styles.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.5",
+    "tailwindcss": "^4.3.5"
+  }
+}

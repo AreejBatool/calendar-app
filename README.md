@@ -91,11 +91,25 @@ The `id` is created automatically. Times use the 24-hour clock. An event with no
 - Using only the keyboard? The first **Tab** on the page shows a **Skip to calendar** link. Press **Enter** to jump straight to the calendar.
 - The month view shows up to 3 events per day. Click **+N more** to see the rest.
 
+## Changing the styles (Tailwind CSS)
+The look is built with [Tailwind CSS](https://tailwindcss.com) v4. You only need this section if you want to change colours or layout. To just use the app, skip it.
+
+1. Install [Node.js](https://nodejs.org) (version 20 or newer).
+2. In the project folder, run `npm install` once.
+3. Edit `src/input.css` (colours, shared styles) or the Tailwind classes in `index.html`.
+4. Run `npm run build:css` to rebuild `styles.css`. While you work, `npm run watch:css` rebuilds it every time you save.
+
+- Colours live in the `@theme` block at the top of `src/input.css`, for example `--color-accent`. Changing one value there updates every place that uses it.
+- `phone:`, `tablet:` and `tiny:` in class names mean "at 600px wide or less", "at 900px or less" and "at 380px or less".
+- Commit the rebuilt `styles.css`. The live site serves that file as it is, with no build step.
+
 ## Project files
 | File | What it does |
 |---|---|
 | `index.html` | The page itself: top bar, sidebar, calendar area and the event forms. |
-| `styles.css` | The look and layout, including the changes for tablets and phones. |
+| `styles.css` | The look and layout. It is generated from `src/input.css`, so don't edit it by hand. |
+| `src/input.css` | The Tailwind source: colour tokens, shared styles, and the tablet and phone rules. |
+| `package.json` | The Tailwind build commands (`build:css`, `watch:css`). |
 | `app.js` | Everything the app does: saving, showing events, views, forms and checks. |
 | `docs/` | The screenshots shown in this README. |
 | `tasks/todo.md` | The task plan and review notes. |

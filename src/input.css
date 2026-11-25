@@ -1,0 +1,281 @@
+/*
+ * Tailwind CSS v4 source for styles.css.
+ * Edit this file (and the classes in index.html), then run `npm run build:css`.
+ * Do not edit styles.css by hand: it is generated.
+ */
+
+/* source(none): scan only the two files below, not README/todo text. */
+@import "tailwindcss" source(none);
+@source "../index.html";
+@source "../app.js";
+@source not inline("container"); /* app.js uses "container" as a variable name, not a class */
+
+/* ---------- Design tokens ---------- */
+/* Every text/background pair is >= 4.5:1 and field borders are >= 3:1 (measured in tasks/todo.md, Phase 3). */
+@theme {
+  --font-sans: "Segoe UI", Roboto, system-ui, -apple-system, sans-serif;
+
+  --color-page: #f6f8fc;
+  --color-surface: #fff;
+  --color-ink: #1f1f1f;           /* 15.5:1 on page */
+  --color-muted: #5f6368;         /* 6.0:1 on white, 5.7:1 on page */
+  --color-line: #dde1e6;          /* decorative grid lines */
+  --color-field: #80868b;         /* 3.7:1 non-text contrast */
+  --color-accent: #0b57d0;        /* 6.4:1 with white */
+  --color-accent-strong: #0a4cb8; /* primary button hover */
+  --color-accent-soft: #d3e3fd;
+  --color-accent-ink: #041e49;    /* text on accent-soft */
+  --color-hover: #eef2f8;
+  --color-cell-hover: #f8fafd;
+  --color-danger: #b3261e;        /* 6.5:1 on white */
+  --color-danger-soft: #fceeee;
+  --color-now: #d93025;
+  --color-scrim: rgb(32 33 36 / 0.4);
+  --color-backdrop: rgb(32 33 36 / 0.45);
+
+  --shadow-fab: 0 1px 2px rgb(60 64 67 / 0.3), 0 1px 3px 1px rgb(60 64 67 / 0.15);
+  --shadow-fab-hover: 0 1px 3px rgb(60 64 67 / 0.3), 0 4px 8px 3px rgb(60 64 67 / 0.15);
+  --shadow-dialog: 0 24px 38px 3px rgb(0 0 0 / 0.14), 0 9px 46px 8px rgb(0 0 0 / 0.12);
+  --shadow-drawer: 0 8px 24px rgb(0 0 0 / 0.2);
+}
+
+/* Breakpoints use max-width so they match isNarrow()/isMobile() in app.js exactly
+   (Tailwind's built-in max-* variants use `width < N`, which differs at exactly 900px/600px). */
+@custom-variant tablet { @media (max-width: 900px) { @slot; } }
+@custom-variant phone  { @media (max-width: 600px) { @slot; } }
+@custom-variant tiny   { @media (max-width: 380px) { @slot; } }
+
+/* ---------- Base (on top of Preflight) ---------- */
+@layer base {
+  :root {
+    --hour: 48px;   /* height of one hour in week view (keep in sync with HOUR_H in app.js) */
+    --gutter: 64px; /* width of the hour-label column */
+    @variant phone { --gutter: 40px; }
+  }
+  html, body { height: 100%; }
+  body { line-height: normal; } /* keep the pre-Tailwind text metrics (Preflight uses 1.5) */
+  button { cursor: pointer; }   /* Preflight resets buttons to the default cursor */
+  :focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+}
+
+/* ---------- Components: classes reused in the markup or created by app.js ---------- */
+@layer components {
+  /* Shared controls */
+  .icon-btn {
+    @apply inline-grid size-10 flex-none place-items-center rounded-full text-muted hover:bg-hover;
+    @variant phone { @apply h-9 w-8; }
+  }
+  .icon-btn svg { @apply size-6 fill-current; }
+
+  .btn { @apply h-10 rounded-full px-5 font-medium; }
+  .btn.primary { @apply bg-accent text-white hover:bg-accent-strong; }
+  .btn.text { @apply text-accent hover:bg-hover; }
+  .btn.danger { @apply text-danger hover:bg-danger-soft; }
+
+  /* Pill view picker with a drawn arrow (a data-URL background has no utility). */
+  .view-select select {
+    @apply h-10 cursor-pointer appearance-none rounded-full border border-field bg-surface pr-10 pl-[18px] font-medium hover:bg-hover;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z' fill='%235f6368'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 20px;
+    @variant phone {
+      @apply h-9 pr-6 pl-2.5 text-[14px];
+      background-position: right 4px center;
+    }
+  }
+
+  /* Layout: the sidebar and panel react to body.sidebar-collapsed / body.sidebar-open set by app.js. */
+  .sidebar { @apply w-64 flex-none overflow-y-auto pt-2 pr-3 pb-4 pl-4; }
+  .sidebar-collapsed .sidebar { @apply hidden; }
+  .panel {
+    @apply mr-4 mb-4 flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl bg-surface;
+    @variant phone { @apply rounded-2xl; }
+  }
+  .sidebar-collapsed .panel { @apply ml-4; }
+
+  /* Tablet: the sidebar becomes a slide-over. It is visible instantly on open (so focus can move in);
+     the closed rule keeps it visible while it slides out. */
+  .sidebar, .sidebar-collapsed .sidebar {
+    @variant tablet {
+      @apply fixed inset-y-0 left-0 z-40 block w-70 bg-surface pt-4 shadow-drawer;
+      transform: translateX(-100%);
+      visibility: hidden;
+      transition: transform 0.2s ease, visibility 0.2s;
+    }
+  }
+  .sidebar-open .sidebar {
+    @variant tablet {
+      transform: none;
+      visibility: visible;
+      transition: transform 0.2s ease, visibility 0s;
+    }
+  }
+  .panel, .sidebar-collapsed .panel {
+    @variant tablet { @apply mx-2 mb-2; }
+  }
+
+  /* Sidebar: mini calendar + calendar list */
+  .mini-wd { @apply h-7 text-[11px] leading-7 font-medium text-muted; }
+  .mini-day { @apply mx-auto my-px size-7 rounded-full text-[11px] hover:bg-hover; }
+  .mini-day.other { @apply text-muted; }
+  .mini-day.selected { @apply bg-accent-soft text-accent-ink; }
+  .mini-day.today { @apply bg-accent text-white; }
+
+  .cal-item { @apply flex min-h-10 cursor-pointer items-center gap-3 rounded-lg px-2 text-[14px] hover:bg-hover; }
+  .cal-item input { @apply m-0 size-[18px] cursor-pointer; }
+
+  /* Shared round date button (week header + month cells) */
+  .day-num { @apply inline-grid place-items-center rounded-full hover:bg-hover; }
+
+  /* Week view */
+  .week-head, .week-allday, .week-grid {
+    display: grid;
+    grid-template-columns: var(--gutter) repeat(7, minmax(0, 1fr));
+  }
+  .week-head, .week-allday { @apply flex-none overflow-y-hidden; scrollbar-gutter: stable; }
+  .week-head { @apply pt-3; }
+  .tz { @apply self-end pr-2 pb-1 text-right text-[10px] text-muted; }
+  .wh-col { @apply flex min-w-0 flex-col items-center gap-0.5 pb-2; }
+  .wh-day {
+    @apply text-[11px] font-medium tracking-[0.8px] text-muted;
+    @variant phone { @apply text-[10px] tracking-normal; }
+  }
+  .wh-col .day-num {
+    @apply size-[46px] text-[24px];
+    @variant phone { @apply size-8 text-[16px]; }
+  }
+  .wh-col.today .wh-day { @apply text-accent; }
+  .wh-col.today .day-num { @apply bg-accent text-white; }
+
+  .week-allday { @apply min-h-[26px] border-b border-line; }
+  .ad-cell {
+    @apply min-w-0 cursor-pointer border-l border-line px-1 pt-0.5 pb-1;
+    @variant phone { @apply px-px py-0.5; }
+  }
+
+  .week-body { @apply flex-1 overflow-y-auto; scrollbar-gutter: stable; }
+  .week-grid { @apply relative; height: calc(var(--hour) * 24); }
+  .hours { @apply relative; }
+  .hours span { @apply absolute right-2 -translate-y-1/2 text-[10px] whitespace-nowrap text-muted; }
+  .day-col {
+    @apply relative cursor-pointer border-l border-line;
+    /* one 1px hour line every --hour */
+    background: repeating-linear-gradient(to bottom, var(--color-line) 0 1px, transparent 1px var(--hour));
+  }
+
+  /* --c is the event's calendar colour, set inline by app.js */
+  .event-block {
+    @apply absolute z-1 flex flex-col items-start gap-px overflow-hidden rounded-md border bg-surface px-2 py-1 text-left text-[12px] leading-[1.25];
+    border-color: var(--c);
+    color: var(--c);
+    @variant phone { @apply px-[3px] py-0.5 text-[10px]; }
+  }
+  .event-block:hover { z-index: 2; background: color-mix(in srgb, var(--c) 8%, white); }
+  .event-block:focus-visible { @apply z-2; }
+  .event-block.short { @apply flex-row items-center gap-1.5 py-0; }
+  .eb-title { @apply max-w-full min-w-0 truncate font-medium; }
+  .eb-time {
+    @apply max-w-full truncate;
+    @variant phone { @apply hidden; }
+  }
+  .event-block.short .eb-time { @apply flex-none; }
+
+  .now-line { @apply pointer-events-none absolute right-0 -left-px z-3 h-0.5 bg-now; }
+  .now-line::before { @apply absolute -top-[5px] -left-1.5 size-3 rounded-full bg-now; content: ""; }
+
+  /* Chips (month view + all-day row) */
+  .chip {
+    /* 22px line + 2px padding = 24px target size */
+    @apply mt-px block w-full truncate rounded-sm px-2 py-px text-left text-[12px] leading-[22px] hover:bg-hover;
+  }
+  .chip::before {
+    @apply mr-1.5 inline-block size-2 rounded-full align-[1px];
+    content: "";
+    background: var(--c);
+  }
+  .chip.allday { @apply font-medium text-white; background: var(--c); }
+  .chip.allday::before { @apply hidden; }
+  .chip.allday:hover { filter: brightness(0.9); }
+  .ad-cell .chip {
+    @variant phone { @apply px-[3px] py-0 text-[10px]; }
+  }
+
+  /* Month view */
+  .month-head { @apply grid flex-none grid-cols-7; }
+  .month-head div { @apply border-l border-line pt-2.5 pb-1 text-center text-[11px] font-medium text-muted; }
+  .month-head div:first-child { @apply border-l-0; }
+  .month-head .short { @apply hidden; }
+  .month-head .long { @variant phone { @apply hidden; } }
+  .month-head .short { @variant phone { @apply inline; } }
+
+  .month-grid {
+    @apply grid min-h-0 flex-1 grid-cols-7 overflow-y-auto;
+    /* day number 28 + 3 chips x 25 + "+N more" 24 + padding = 136px; the grid scrolls on short windows */
+    grid-template-rows: repeat(var(--weeks, 6), minmax(136px, 1fr));
+    @variant phone { grid-template-rows: repeat(var(--weeks, 6), minmax(56px, 1fr)); }
+  }
+  .m-cell {
+    @apply min-w-0 cursor-pointer overflow-hidden border-b border-l border-line px-1 pt-1 pb-0.5 text-center;
+    @variant phone { @apply min-h-14 p-0.5; }
+  }
+  .m-cell:nth-child(7n + 1) { @apply border-l-0; }
+  .m-cell:hover, .m-cell:focus-within { @apply bg-cell-hover; }
+  .m-cell .day-num {
+    @apply size-7 text-[12px] font-medium;
+    @variant phone { @apply mx-auto mb-0.5 grid; }
+  }
+  .m-cell.other .day-num { @apply text-muted; }
+  .m-cell.today .day-num { @apply bg-accent text-white; }
+
+  .more { @apply block min-h-6 w-full rounded-sm px-2 text-left text-[12px] font-medium hover:bg-hover; }
+
+  /* Phone month view: events become dots; tapping the day opens the day panel */
+  .m-cell .chip {
+    @variant phone {
+      @apply pointer-events-none m-px inline-block size-2 rounded-full p-0 align-middle text-[0px] leading-0;
+      background: var(--c);
+    }
+  }
+  .m-cell .chip::before { @variant phone { @apply hidden; } }
+  .m-cell .more { @variant phone { @apply pointer-events-none min-h-0 p-0 text-center text-[10px]; } }
+
+  /* Day-events panel */
+  .day-list { @apply mb-2; }
+  .day-list li { @apply border-b border-line; }
+  .day-list button { @apply flex min-h-11 w-full items-center gap-3 px-2 text-left hover:bg-hover; }
+  .day-list .dot { @apply size-2.5 flex-none rounded-full; background: var(--c); }
+  .day-list .time { @apply w-[110px] flex-none text-[13px] text-muted; }
+  .day-list .name { @apply truncate; }
+  .day-list .empty { @apply px-2 py-3 text-muted; }
+
+  /* Modals (used twice) */
+  .modal {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-backdrop p-4;
+    @variant phone { @apply items-end p-0; }
+  }
+  .modal-box {
+    @apply max-h-full w-full max-w-[440px] overflow-y-auto rounded-2xl bg-surface p-6 shadow-dialog;
+    @variant phone { @apply max-w-none rounded-t-2xl rounded-b-none; }
+  }
+
+  /* Event form; .invalid and .error are toggled by app.js */
+  form label { @apply mb-1 block text-[13px] font-medium text-muted; }
+  form :is(input, textarea, select) {
+    @apply mt-1 block w-full rounded-lg border border-field bg-surface px-2.5 py-[9px] font-normal text-ink;
+  }
+  form .invalid { @apply border-2 border-danger px-[9px] py-2; }
+  .error { @apply mb-1 block min-h-[18px] text-[12px] text-danger; }
+
+  /* Windows high-contrast: keep states visible when backgrounds are removed */
+  @media (forced-colors: active) {
+    .day-num[aria-current="date"], .mini-day.today { outline: 2px solid CanvasText; outline-offset: -2px; }
+    .mini-day.selected { outline: 1px dashed CanvasText; outline-offset: -3px; }
+    .event-block, .chip.allday { border: 1px solid CanvasText; }
+    .chip::before, .day-list .dot, .now-line, .now-line::before { forced-color-adjust: none; }
+  }
+}

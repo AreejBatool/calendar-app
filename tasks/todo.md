@@ -207,3 +207,73 @@ The reference is a Google-Calendar-style layout. We copy the **layout and visual
 - **AC note**: todo 25's target of "10 or fewer tab stops" was my own miscount. The result is 12. All 12 are real controls, and the skip link reaches the calendar with one Tab.
 - **Not tested**: a real Windows high-contrast theme (the `forced-colors` CSS was only reviewed), real screen readers, and real phones.
 
+
+# Phase 5: Deploy the app for free (no credit card)
+
+Host: **GitHub Pages**. The repo (`AreejBatool/calendar-app`) is already public on GitHub and in sync with local `main`, and the app is plain static files with relative paths, so no build step or code change is needed. GitHub Pages is free and needs no card. (Fallback: Netlify Drop at app.netlify.com/drop, with a free account and no card.)
+
+- [x] **33. Turn on GitHub Pages** (done by you in the browser; I can't, because `gh` isn't installed and the API needs a token): repo → **Settings → Pages** → Source **Deploy from a branch** → Branch **main**, folder **/ (root)** → **Save**.
+  - AC: Settings → Pages shows "Your site is live at https://areejbatool.github.io/calendar-app/" after 1–2 minutes.
+- [x] **34. Verify the live site** (me): fetch the URL and check that `index.html`, `styles.css` and `app.js` all return 200.
+  - AC: all three return 200.
+- [x] **35. Add the live link to `README.md`** (one line near the top).
+  - AC: the README shows the live URL.
+- [x] **36. Review section** in this file, then commit and push (pushing to `main` redeploys automatically).
+
+## Phase 5 Review
+
+Phase 5 was completed by the project owner. GitHub Pages is turned on for `main` / root, and the site is served at https://areejbatool.github.io/calendar-app/. Note: the local copy of `README.md` doesn't show the live link yet (as of 2026-11-25). If it was added on GitHub, pull before pushing Phase 6.
+
+---
+
+# Phase 6: Move the styling to Tailwind CSS v4 (from the latest docs via Context7)
+
+Source: Context7 `/tailwindlabs/tailwindcss.com` (v4 docs). Key points:
+- v4 is configured **in CSS**: `@import "tailwindcss";` plus `@theme { --color-*: … }`. There is no `tailwind.config.js`.
+- The build tool is the **`@tailwindcss/cli`** package: `npx @tailwindcss/cli -i input.css -o output.css`.
+- The Play CDN (`@tailwindcss/browser@4`) is "for development purposes only, not for production". The app is live on GitHub Pages, so we **don't** use it.
+- `@source` registers extra files to scan for class names, and `@layer components` + `@apply` let us keep named classes.
+
+**Approach**: a hybrid that keeps the look and the accessibility work the same.
+- Static markup in `index.html` uses Tailwind utilities directly.
+- Classes that `app.js` builds at runtime (`event-block`, `chip`, `m-cell`, `mini-day`, `day-num`, `now-line`…) stay as named classes, rewritten with `@apply` and theme tokens. `app.js` doesn't change.
+- Things utilities can't express well stay as plain CSS: the hour-line gradient, `color-mix` hovers, `forced-colors` rules and the `--weeks` grid rows.
+- The built `styles.css` is committed, so GitHub Pages still serves plain static files and nobody needs Node just to open the app.
+
+- [x] **37. Set up the Tailwind v4 build**: add a `package.json` with `tailwindcss` and `@tailwindcss/cli` as dev dependencies and the scripts `build:css` (`--minify`) and `watch:css`. Add `.gitignore` for `node_modules/`. The source file `src/input.css` compiles to `styles.css`. Add `@source "../app.js"` and `@source "../index.html"`.
+  - AC: `npm run build:css` produces `styles.css` with no errors.
+- [x] **38. Theme tokens**: move the `:root` colours into `@theme` (`--color-bg`, `--color-surface`, `--color-ink`, `--color-muted`, `--color-line`, `--color-field`, `--color-accent`, `--color-accent-soft`, `--color-hover`, `--color-danger`, `--color-now`) and the 24px/16px radii, so `bg-accent`, `text-muted` and similar utilities exist. Keep `--hour` and `--gutter` as plain variables, because `app.js` and the media queries use them.
+  - AC: the hex values are unchanged, so every contrast ratio from Phase 3 still holds.
+- [x] **39. Base layer**: check what Preflight already resets (box-sizing, button and list resets, `[hidden]`) and delete our duplicate rules. Keep `:focus-visible`, the skip link, `.sr-only` (now Tailwind's own `sr-only` utility) and the `prefers-reduced-motion` rule.
+  - AC: there is no visual change to buttons, headings or lists, and the focus outline still shows.
+- [x] **40. Convert the static markup in `index.html`**: the top bar, brand, sidebar shell, panel, and both modals with their form, rows and actions get utility classes, including the `max-[900px]:`, `max-[600px]:` and `max-[380px]:` variants that replace the media queries. Remove the old CSS for those parts.
+  - AC: screenshots at 1440, 768, 360 and 320px match the current ones (`docs/*.png`).
+- [x] **41. Convert the JS-rendered classes**: rewrite the week view, month view, chips, mini calendar, calendar list and day-list rules in `@layer components` using `@apply` and the theme tokens. Keep class names the same.
+  - AC: `app.js` is unchanged, and the week view, month view, the "+N more" day panel and the phone dot view all look the same as before.
+- [x] **42. Verify**: run the build, then check in headless Edge for no console errors, the interaction flows (add/edit/delete, view switch, sidebar overlay, Esc, focus return) and screenshots at 1440, 768, 360 and 320px. Spot-check contrast and the focus outline.
+  - AC: no regressions. Any difference is listed in the review.
+- [x] **43. Docs and review**: add a short "Styling (Tailwind)" section to the README (how to run `npm install` and `npm run build:css`), and a Phase 6 review here.
+
+## Phase 6 Review
+
+**Files**
+- `package.json`, `package-lock.json` (new): dev dependencies `tailwindcss` and `@tailwindcss/cli`, both **4.3.5**. Scripts `build:css` (minified) and `watch:css`.
+- `.gitignore` (new): `node_modules/`.
+- `src/input.css` (new, 252 lines): the Tailwind source.
+  - `@import "tailwindcss" source(none)` plus `@source` for `index.html` and `app.js`. Tailwind scans only those two files, so words in the README or this file don't generate classes. `@source not inline("container")` drops a class that the variable name `container` in `app.js` would otherwise create.
+  - `@theme` tokens: the same hex values as before, renamed (`--color-page`, `-surface`, `-ink`, `-muted`, `-line`, `-field`, `-accent`, `-accent-strong`, `-accent-soft`, `-accent-ink`, `-hover`, `-cell-hover`, `-danger`, `-danger-soft`, `-now`, `-scrim`, `-backdrop`), plus `--font-sans` and four `--shadow-*` tokens. This gives utilities like `bg-accent`, `text-muted` and `shadow-fab`.
+  - `@custom-variant tablet`, `phone` and `tiny` use `max-width: 900/600/380px`. These match `isNarrow()` and `isMobile()` in `app.js` exactly. Tailwind's built-in `max-*` variants use `width < N`, which would disagree at exactly 900px.
+  - `@layer base`: `--hour` and `--gutter`, `line-height: normal` to keep the old text metrics (Preflight uses 1.5), `cursor: pointer` on buttons (Preflight resets it), the `:focus-visible` outline and reduced motion.
+  - `@layer components`: every class that `app.js` creates or toggles, rewritten with `@apply` and nested `@variant phone/tablet`. Kept as plain CSS: the hour-line gradient, the `color-mix` hover, `--c` colours, `--weeks` rows, the slide-over transform and the `forced-colors` rules.
+- `styles.css`: now **generated** (minified, about 26 KB). Don't edit it by hand.
+- `index.html`: the static markup uses utilities (top bar, brand, Today pill, title, layout, Create, mini-calendar header, scrim, views, modal headings, form rows and actions). The class names `app.js` relies on are kept (`topbar`, `layout`, `sidebar`, `panel`, `icon-btn`, `btn`, `error`, `day-list`, `modal`, `modal-box`, `view-select`). The old one-off classes (`brand`, `pill`, `view`, `row`, `actions`, `spacer`, `req`, `skip-link`…) are gone.
+- `app.js`: **unchanged**.
+- `README.md`: a new "Changing the styles (Tailwind CSS)" section, and `src/input.css` and `package.json` added to the file table.
+
+**Verified** (headless Edge, Puppeteer, the same seeded events before and after)
+- **21 of 21** interaction checks pass, the same as the baseline on the old CSS: the add modal, focus on the title, `inert` behind it, the validation error with `.invalid` + `aria-invalid`, Esc and focus return, saving, month cells, "+2 more" → panel with 5, sidebar collapse, the tablet overlay (hidden, then open, `main` inert, Esc returns focus to the menu), the 3px focus outline, no horizontal scroll at 320/360/768, and **0 console errors**.
+- Pixel diff of 13 screenshots (week and month at 1440/768/360/320, modal, day panel, collapsed sidebar, overlay): 6 are identical, and the rest differ by 0.3% of pixels or less. The only real visual change is that the text in the date/time inputs sits about 1px higher, because Preflight zeroes Chromium's internal date-field padding. Every other difference was the red now-line, which moved because time passed between runs.
+- Computed styles match except: the Today pill radius is `rounded-full` instead of 20px (looks the same at 40px tall), and the Create shadow has Tailwind's extra transparent ring layers (looks the same).
+- The colour hex values are unchanged, so the Phase 3 contrast table still holds.
+
+**Not done or not tested**: no real phones, no screen reader, no Windows high-contrast theme. Not committed or pushed yet.
