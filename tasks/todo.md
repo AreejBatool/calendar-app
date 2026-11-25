@@ -276,4 +276,6 @@ Source: Context7 `/tailwindlabs/tailwindcss.com` (v4 docs). Key points:
 - Computed styles match except: the Today pill radius is `rounded-full` instead of 20px (looks the same at 40px tall), and the Create shadow has Tailwind's extra transparent ring layers (looks the same).
 - The colour hex values are unchanged, so the Phase 3 contrast table still holds.
 
-**Not done or not tested**: no real phones, no screen reader, no Windows high-contrast theme. Not committed or pushed yet.
+**Not done or not tested**: no real phones, no screen reader, no Windows high-contrast theme.
+
+**Follow-up**: committed and pushed as `2d5447a`. Then, as requested, `package-lock.json` (plus `npm-debug.log*`) was added to `.gitignore` and removed from the repo with `git rm --cached`. The local file is kept. `package.json` stays tracked because it holds the build scripts.
