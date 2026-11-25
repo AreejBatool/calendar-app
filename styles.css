@@ -30,6 +30,19 @@ body {
 button, select, input, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; background: none; border: none; padding: 0; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -48px;
+  z-index: 60;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 500;
+}
+.skip-link:focus { top: 8px; }
+#main:focus { outline: none; }
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
@@ -268,7 +281,7 @@ body.sidebar-collapsed .panel { margin-left: 16px; }
   overflow: hidden;
   border-radius: 4px;
   font-size: 12px;
-  line-height: 18px;
+  line-height: 22px;          /* 22 + 2px padding = 24px target size */
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -305,6 +318,8 @@ body.sidebar-collapsed .panel { margin-left: 16px; }
   min-height: 0;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
+  /* day number 28 + 3 chips x 25 + "+N more" 24 + padding = 136px; the grid scrolls on short windows */
+  grid-template-rows: repeat(var(--weeks, 6), minmax(136px, 1fr));
   overflow-y: auto;
 }
 .m-cell {
@@ -410,7 +425,8 @@ form .invalid { border-color: var(--danger); border-width: 2px; padding: 8px 9px
     visibility: hidden;
     transition: transform .2s ease, visibility .2s;
   }
-  body.sidebar-open .sidebar { transform: none; visibility: visible; }
+  /* visible instantly on open (so focus can move in); the closed rule keeps it visible while it slides out */
+  body.sidebar-open .sidebar { transform: none; visibility: visible; transition: transform .2s ease, visibility 0s; }
   .scrim { position: fixed; inset: 0; z-index: 35; background: rgba(32, 33, 36, .4); }
   .panel, body.sidebar-collapsed .panel { margin: 0 8px 8px; }
   .brand { width: auto; padding-right: 8px; }
@@ -436,6 +452,7 @@ form .invalid { border-color: var(--danger); border-width: 2px; padding: 8px 9px
 
   .month-head .long { display: none; }
   .month-head .short { display: inline; }
+  .month-grid { grid-template-rows: repeat(var(--weeks, 6), minmax(56px, 1fr)); }
   .m-cell { min-height: 56px; padding: 2px; }
   .m-cell .day-num { display: grid; margin: 0 auto 2px; }
   .m-cell .chip {               /* events become dots; tapping the day opens the day panel */
@@ -456,6 +473,21 @@ form .invalid { border-color: var(--danger); border-width: 2px; padding: 8px 9px
 
   .modal { align-items: flex-end; padding: 0; }
   .modal-box { max-width: none; border-radius: 16px 16px 0 0; }
+}
+
+/* ---------- Very narrow (320px / 400% zoom): title gets its own line ---------- */
+@media (max-width: 380px) {
+  .topbar { flex-wrap: wrap; }
+  .view-select { margin-left: auto; }
+  .period-title { order: 10; flex-basis: 100%; margin: 4px 0 0 8px; }
+}
+
+/* ---------- Windows high-contrast: keep states visible when backgrounds are removed ---------- */
+@media (forced-colors: active) {
+  .day-num[aria-current="date"], .mini-day.today { outline: 2px solid CanvasText; outline-offset: -2px; }
+  .mini-day.selected { outline: 1px dashed CanvasText; outline-offset: -3px; }
+  .event-block, .chip.allday { border: 1px solid CanvasText; }
+  .chip::before, .day-list .dot, .now-line, .now-line::before { forced-color-adjust: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

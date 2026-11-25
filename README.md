@@ -1,140 +1,102 @@
 # Calendar App
 
-A week-and-month calendar written in plain HTML, CSS and JavaScript. It has no framework, no build step and no dependencies. Events are saved in your browser's localStorage.
+A simple calendar that runs in your web browser, with a week view and a month view. It is for anyone who wants to keep track of events without signing up or installing anything.
 
 ![Week view](docs/week-view.png)
 
-| Month view | Phone (360px) |
+| Month view | Phone |
 |---|---|
 | ![Month view](docs/month-view.png) | ![Phone week view](docs/phone-week.png) |
 
 ## Features
-- **Week view** (the default): a 24-hour time grid that opens at 7 AM. Events are drawn at their real times, and overlapping events sit side by side. Events without a start time go in an all-day row. A red line marks the current time and moves every minute.
-- **Month view**: up to 3 events per day, then **+N more**, which opens a list of every event that day.
-- **Top bar**: a menu button, Today, ‹ ›, the current period ("November 2026" or "Dec 2026 – Jan 2027"), and a Week/Month switch. The app remembers the last view you used.
-- **Sidebar**:
-  - **+ Create** button.
-  - A small month calendar: click any date to jump there.
-  - **My calendars**: Personal, Work and Other, each with its own colour and a checkbox to show or hide its events. The app remembers which are hidden.
-- **Add, edit and delete**:
-  - Click an empty hour slot to add an event at that time.
-  - Click a date number to see that day's events.
-  - Click an event to edit or delete it.
-- **Validation**:
-  - The title is required (100 characters max) and the date must be real.
-  - The end time must be after the start, and an end time needs a start time.
-  - Errors appear next to the field.
-- **Responsive**:
-  - Below 900px the sidebar slides in from the menu button.
-  - Below 600px the layout is compact, month events show as dots, and tapping a busy day lists its events.
-- **Accessible**: works fully with the keyboard and with screen readers (details in [Accessibility](#accessibility)).
+- Add, edit and delete events, each with a title, date, start and end time, and description.
+- See your events by **Week** (an hourly grid) or by **Month**. In the week view, a red line shows the current time.
+- Sort events into three calendars, **Personal**, **Work** and **Other**, each with its own colour.
+- Show or hide each calendar with a checkbox under **My calendars**.
+- Jump to any date with the small month calendar in the sidebar.
+- Click a date number to see every event on that day.
+- Use it on a phone, tablet or computer. The layout changes for smaller screens.
+- Your events are saved in your browser, so they are still there after you close the page.
 
-## Run it
-Get the code:
-```sh
-git clone https://github.com/AreejBatool/calendar-app.git
-cd calendar-app
-```
-Then open `index.html` in any modern browser by double-clicking it. You don't need a server.
+## Setup
+1. Get the project. Choose one of these:
+   - **Download ZIP:** go to https://github.com/AreejBatool/calendar-app, click the green **Code** button, then click **Download ZIP**. Unzip (extract) the file you downloaded.
+   - **Clone with git** (git is a tool for copying code projects). Type this in a terminal:
+     ```sh
+     git clone https://github.com/AreejBatool/calendar-app.git
+     ```
+2. Open the project folder.
+3. Double-click `index.html`. It opens in your web browser and the calendar appears.
 
-If you prefer a local server:
-```sh
-npx serve .        # or: python -m http.server
-```
+You do not need to install anything. There is no server and no setup beyond these steps.
 
-## Keyboard
-| Key | Action |
-|---|---|
-| Tab / Shift+Tab | Move between controls. Inside a pop-up, focus stays in the pop-up. |
-| Enter / Space | Activate the focused day, event or button |
-| ← → | Previous or next day, when a date number has focus |
-| ↑ ↓ | Previous or next week, in month view |
-| Esc | Close the open pop-up, or the slide-over sidebar |
+## How to use
+**Add an event**
+1. Click **Create** in the sidebar. You can also click an empty hour in the week view, or an empty day in the month view, to start with that date (and hour) filled in.
+2. Fill in **Title** and **Date** (both required). **Start**, **End**, **Calendar** and **Description** are optional.
+3. Click **Save**.
 
-## Files
-| File | Purpose |
-|---|---|
-| `index.html` | Markup: the top bar, sidebar, week and month containers, the event form and the day-events panel |
-| `styles.css` | Design tokens, layout, both views, the pop-ups, and the responsive rules (`900px` and `600px`) |
-| `app.js` | Storage, rendering, navigation, the calendar filters, the pop-ups, validation and add/edit/delete |
-| `docs/` | The screenshots used in this README |
-| `tasks/todo.md` | The plan, task checklist with acceptance criteria, and review notes for every phase |
-| `.claude/commands/ally-check.md` | A project slash command for an accessibility review in Claude Code |
+**Edit or delete an event**
+1. Click the event in the calendar. The **Edit event** form opens.
+2. Change what you need and click **Save**, or click **Delete** and confirm.
 
-### Where things live in `app.js`
-- `store`, `loadEvents()`, `saveEvents()`: localStorage access. A read that fails falls back to defaults.
-- `render()`: draws the title, the active view and the small month calendar.
-- `renderWeek()`, `layoutDay()`, `eventBlock()`, `updateNowLine()`: the week view and how overlapping events are placed.
-- `renderMonth()`, `chip()`, `dayButton()`: the month view.
-- `renderMini()`, `renderCalList()`, `setSidebar()`: the sidebar.
-- `goTo()`, `shift()`, `setView()`: navigation.
-- `showDialog()` / `hideDialog()`: open and close the pop-ups, keeping focus inside while open and putting it back afterwards.
-- `openModal()`, `openDayPanel()`: the event form and the day-events panel.
-- `validate()`, `showErrors()`, `handleSubmit()`, `handleDelete()`: the form logic.
+**Switch between views**
+- Use the **Week** / **Month** drop-down in the top right. The app remembers your choice.
 
-## Data format
-localStorage keys:
+**Move between weeks or months**
+- Click the left and right arrows next to **Today** to go back or forward.
+- Click **Today** to return to the current date.
+- Or click any date in the small calendar in the sidebar.
 
-| Key | Value |
-|---|---|
-| `calendarEvents` | JSON array of events (below) |
-| `calendarView` | `"week"` or `"month"` |
-| `calendarHidden` | JSON array of hidden calendar ids, e.g. `["work"]` |
+**Show or hide calendars**
+- Under **My calendars**, untick a box to hide those events. Tick it again to show them.
+- Click the menu button (three lines, top left) to show or hide the sidebar.
+
+## Example usage
+Add a "Team meeting" this Friday from 9:00 to 10:00:
+
+1. Click **Create**. A form titled **Add event** opens.
+2. Type `Team meeting` in **Title**.
+3. In **Date**, pick this Friday.
+4. Set **Start** to 9:00 AM and **End** to 10:00 AM.
+5. In **Calendar**, choose **Work**.
+6. Click **Save**. The form closes. In the week view, a green block showing "Team meeting" and "9 – 10am" appears in Friday's column.
+
+If you leave **Title** empty, or set **End** before **Start**, you see a red message under the field and the event is not saved until you fix it.
+
+The app saves the event in localStorage (storage inside your browser) under the name `calendarEvents`. It looks like this:
 
 ```json
-[
-  {
-    "id": "lq3k9x2abcd",
-    "title": "Team sync",
-    "date": "2026-11-25",
-    "calendar": "work",
-    "startTime": "09:30",
-    "endTime": "10:00",
-    "description": "Weekly check-in"
-  }
-]
+{
+  "id": "lq3k9x2abcd",
+  "title": "Team meeting",
+  "date": "2026-11-27",
+  "calendar": "work",
+  "startTime": "09:00",
+  "endTime": "10:00",
+  "description": ""
+}
 ```
-- `calendar` is `personal`, `work` or `other`. Events saved before this field existed count as `personal`.
-- `startTime` and `endTime` are `HH:MM` (24-hour) or empty. An empty `startTime` makes it an all-day event. Without an `endTime`, the event lasts 1 hour.
-- If the stored data is not valid JSON, the app starts with an empty list instead of crashing.
 
-To add or rename calendars, edit the `CALENDARS` list at the top of `app.js`. Pick colours with at least 4.5:1 contrast against white.
+The `id` is created automatically. Times use the 24-hour clock. An event with no start time is shown as an all-day event.
 
-## Accessibility
-- **Contrast**: all text pairs measure at least 4.5:1 and form-field borders at least 3:1. The values are noted in `styles.css`.
-- **Real buttons with full names**: every day, event and "+N more" is a `<button>` whose name includes the full date, time and calendar. Today is marked with `aria-current="date"`.
-- **Pop-ups**:
-  - Focus stays inside while one is open, because the page behind is made `inert`.
-  - Focus returns to where it was when the pop-up closes.
-  - Esc closes it.
-- **Form errors**: linked to their fields (`aria-describedby`), and the fields are marked `aria-invalid`. On a failed save, focus moves to the first problem.
-- **Focus and announcements**: a visible `:focus-visible` outline, and the period title announces changes (`aria-live`).
-- **Motion**: honours `prefers-reduced-motion`.
+## Tips
+- Your events are stored only in this browser on this computer. A different browser or device will not see them, and clearing your browser data deletes them.
+- To reset all data: open your browser's developer tools (press F12), go to the **Console** tab, paste this line and press Enter:
+  ```js
+  ['calendarEvents', 'calendarView', 'calendarHidden'].forEach((k) => localStorage.removeItem(k)); location.reload();
+  ```
+- Keyboard shortcuts: press **Esc** to close the open form or pop-up. Use **Tab** to move between buttons and **Enter** to press one.
+- When a date number has keyboard focus, the left and right arrow keys move one day. In the month view, the up and down arrow keys move one week. The small calendar in the sidebar works the same way: up and down move one week there too.
+- Using only the keyboard? The first **Tab** on the page shows a **Skip to calendar** link. Press **Enter** to jump straight to the calendar.
+- The month view shows up to 3 events per day. Click **+N more** to see the rest.
 
-## Browser support
-Recent Chrome, Edge, Firefox and Safari. It relies on CSS grid, `color-mix()`, the `inert` attribute, `<input type="date">` / `type="time"`, and localStorage.
-
-## Changelog
-- **Phase 3**:
-  - Redesigned layout with a top bar and sidebar.
-  - New week view: time grid, overlap layout and current-time line.
-  - Calendar categories with colours and filters.
-  - Small month calendar for jumping to dates.
-  - Accessibility fixes: contrast, keyboard use, focus handling and labels.
-- **Phase 2**: added a day-events panel and made "+N more" clickable. On mobile, tapping a day that has events lists them. README added.
-- **Phase 1**: month grid and navigation, add/edit/delete with validation, localStorage storage, responsive layout.
-
-The full task list and review notes are in [`tasks/todo.md`](tasks/todo.md).
-
-## Contributing
-1. Keep it dependency-free: plain HTML, CSS and JS only.
-2. Add the task to `tasks/todo.md` with acceptance criteria before changing code.
-3. Test by hand in a browser at 360px, 768px and 1280px widths, and with the keyboard only, before committing.
-4. Keep new colours at 4.5:1 contrast or better for text and 3:1 for borders.
-5. Update this README, including the screenshots in `docs/` if the UI changes, when you change features, files or the data format.
-
-## Reset data
-Open DevTools, go to Application → Local Storage, and delete the `calendar*` keys. Or run this in the console:
-```js
-['calendarEvents', 'calendarView', 'calendarHidden'].forEach((k) => localStorage.removeItem(k)); location.reload();
-```
+## Project files
+| File | What it does |
+|---|---|
+| `index.html` | The page itself: top bar, sidebar, calendar area and the event forms. |
+| `styles.css` | The look and layout, including the changes for tablets and phones. |
+| `app.js` | Everything the app does: saving, showing events, views, forms and checks. |
+| `docs/` | The screenshots shown in this README. |
+| `tasks/todo.md` | The task plan and review notes. |
+| `.claude/` | Settings for the Claude Code assistant. Not needed to run the app. |

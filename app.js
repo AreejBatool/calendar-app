@@ -115,6 +115,19 @@ function srContext(ev) {
   return el('span', 'sr-only', `, ${timeText(ev)}, ${longDate(fromKey(ev.date))}, ${calOf(ev).name} calendar`);
 }
 
+// Make `btn` the only tab stop among `selector` inside `container`, then focus it.
+function rove(container, selector, btn) {
+  if (!btn) return;
+  container.querySelectorAll(selector).forEach((b) => (b.tabIndex = -1));
+  btn.tabIndex = 0;
+  btn.focus();
+}
+
+// Only touch the aria-live title when the text really changes, so screen readers don't repeat it.
+function setPeriodTitle(title) {
+  if ($('periodTitle').textContent !== title) $('periodTitle').textContent = title;
+}
+
 const isMobile = () => window.matchMedia('(max-width: 600px)').matches;
 const isNarrow = () => window.matchMedia('(max-width: 900px)').matches;
 
@@ -122,7 +135,7 @@ const isNarrow = () => window.matchMedia('(max-width: 900px)').matches;
 function render() {
   $('appIconDay').textContent = new Date().getDate();
   const title = periodTitle();
-  $('periodTitle').textContent = title;
+  setPeriodTitle(title);
   document.title = `${title} · Calendar`;
   $('viewSelect').value = view;
   $('prevBtn').setAttribute('aria-label', `Previous ${view}`);
@@ -151,6 +164,8 @@ function dayButton(d, isToday) {
   const b = el('button', 'day-num', d.getDate());
   b.type = 'button';
   b.dataset.date = key;
+  b.tabIndex = key === toKey(cursor) ? 0 : -1; // one tab stop per grid; arrows move between days
+  b.setAttribute('aria-haspopup', 'dialog');
   b.setAttribute('aria-label', `${longDate(d)}, ${n ? `${n} event${n > 1 ? 's' : ''}` : 'no events'}`);
   if (isToday) b.setAttribute('aria-current', 'date');
   return b;
@@ -160,6 +175,7 @@ function chip(ev) {
   const c = el('button', 'chip' + (ev.startTime ? '' : ' allday'));
   c.type = 'button';
   c.dataset.id = ev.id;
+  c.setAttribute('aria-haspopup', 'dialog');
   c.style.setProperty('--c', calOf(ev).color);
   c.append((ev.startTime ? fmtTime(toMin(ev.startTime)) + ' ' : '') + ev.title, srContext(ev));
   c.title = `${ev.title} (${timeText(ev)})`;
@@ -253,6 +269,7 @@ function eventBlock({ ev, s, e }) {
   const b = el('button', 'event-block' + (e - s < 45 ? ' short' : ''));
   b.type = 'button';
   b.dataset.id = ev.id;
+  b.setAttribute('aria-haspopup', 'dialog');
   b.style.setProperty('--c', calOf(ev).color);
   const time = el('span', 'eb-time', fmtRange(s, e));
   time.setAttribute('aria-hidden', 'true');
@@ -287,7 +304,7 @@ function renderMonth() {
   const start = startOfWeek(first);
   const todayKey = toKey(new Date());
   const grid = $('monthGrid');
-  grid.style.gridTemplateRows = `repeat(${weeks}, minmax(96px, 1fr))`;
+  grid.style.setProperty('--weeks', weeks); // row sizes live in CSS so the phone layout can override them
   grid.replaceChildren();
 
   for (let i = 0; i < weeks * 7; i++) {
@@ -306,6 +323,7 @@ function renderMonth() {
       const more = el('button', 'more', `+${list.length - MAX_VISIBLE} more`);
       more.type = 'button';
       more.dataset.date = key;
+      more.setAttribute('aria-haspopup', 'dialog');
       more.setAttribute('aria-label', `${list.length - MAX_VISIBLE} more events on ${longDate(d)}`);
       cell.appendChild(more);
     }
@@ -326,13 +344,16 @@ function renderMini() {
   const start = startOfWeek(miniMonth);
   const todayKey = toKey(new Date());
   const cursorKey = toKey(cursor);
+  const sameMonth = cursor.getMonth() === miniMonth.getMonth() && cursor.getFullYear() === miniMonth.getFullYear();
+  const focusKey = sameMonth ? cursorKey : toKey(miniMonth); // the picker's single tab stop
   for (let i = 0; i < 42; i++) {
     const d = addDays(start, i);
     const key = toKey(d);
     const b = el('button', 'mini-day', d.getDate());
     b.type = 'button';
     b.dataset.date = key;
-    b.setAttribute('aria-label', longDate(d));
+    b.tabIndex = key === focusKey ? 0 : -1;
+    b.setAttribute('aria-label', longDate(d) + (key === cursorKey ? ', selected' : ''));
     if (d.getMonth() !== miniMonth.getMonth()) b.classList.add('other');
     if (key === cursorKey) b.classList.add('selected');
     if (key === todayKey) { b.classList.add('today'); b.setAttribute('aria-current', 'date'); }
@@ -368,7 +389,9 @@ function setSidebar(open) {
   if (isNarrow()) {
     document.body.classList.toggle('sidebar-open', open);
     $('scrim').hidden = !open;
+    $('main').inert = open; // the overlay behaves like a dialog: nothing behind the scrim is reachable
     if (open) $('createBtn').focus();
+    else if ($('sidebar').contains(document.activeElement)) $('menuBtn').focus();
   } else {
     document.body.classList.toggle('sidebar-collapsed', !open);
   }
@@ -557,8 +580,26 @@ $('miniNext').addEventListener('click', () => {
 $('miniGrid').addEventListener('click', (e) => {
   const b = e.target.closest('.mini-day');
   if (!b) return;
+  const key = b.dataset.date;
   closeSidebarIfOverlay();
-  goTo(fromKey(b.dataset.date));
+  goTo(fromKey(key));
+  // The picker was just rebuilt: stay in it on desktop; on the overlay (now closed) go to that day in the main view.
+  const scope = isNarrow() ? $(`${view}View`) : $('miniGrid');
+  scope.querySelector(`[data-date="${key}"]`)?.focus();
+});
+
+// Arrow keys inside the picker: left/right = 1 day, up/down = 1 week; flips the month at the edges.
+$('miniGrid').addEventListener('keydown', (e) => {
+  const b = e.target.closest('.mini-day');
+  const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[e.key];
+  if (!b || !step) return;
+  e.preventDefault();
+  const t = addDays(fromKey(b.dataset.date), step);
+  if (t.getMonth() !== miniMonth.getMonth() || t.getFullYear() !== miniMonth.getFullYear()) {
+    miniMonth = firstOfMonth(t);
+    renderMini();
+  }
+  rove($('miniGrid'), '.mini-day', $('miniGrid').querySelector(`[data-date="${toKey(t)}"]`));
 });
 
 $('calList').addEventListener('change', (e) => {
@@ -605,7 +646,7 @@ $('main').addEventListener('keydown', (e) => {
   const target = addDays(fromKey(btn.dataset.date), step);
   const find = () => $(`${view}View`).querySelector(`.day-num[data-date="${toKey(target)}"]`);
   if (!find()) goTo(target);
-  find()?.focus();
+  rove($(`${view}View`), '.day-num', find());
 });
 
 $('dayList').addEventListener('click', (e) => {
@@ -644,10 +685,11 @@ document.addEventListener('keydown', (e) => {
 window.matchMedia('(max-width: 900px)').addEventListener('change', () => {
   document.body.classList.remove('sidebar-open');
   $('scrim').hidden = true;
+  $('main').inert = false;
   $('menuBtn').setAttribute('aria-expanded', String(sidebarIsOpen()));
 });
 window.matchMedia('(max-width: 600px)').addEventListener('change', () => {
-  $('periodTitle').textContent = periodTitle();
+  setPeriodTitle(periodTitle());
 });
 
 // Move the current-time line every minute; re-render when the day changes.

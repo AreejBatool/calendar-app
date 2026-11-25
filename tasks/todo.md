@@ -150,3 +150,60 @@ The reference is a Google-Calendar-style layout. We copy the **layout and visual
 
 **Design note**: the layout and visual style follow the reference screenshot, but the app keeps its own name and a generic calendar icon. No third-party logos or branding are used.
 
+
+---
+
+# Phase 4: Accessibility fixes from the second a11y review, plus a README refresh
+
+- [x] **25. One tab stop per grid (Patch A)**: roving `tabindex` on the main-view date buttons and the mini-calendar days, arrow keys in the mini calendar, focus kept after a mini-calendar click, and a "Skip to calendar" link. The selected mini day is announced as "selected", and buttons that open a pop-up get `aria-haspopup="dialog"`.
+  - AC: 10 or fewer tab stops before the calendar (was 53). Mini-calendar day tab stops: 1 (was 42). Focus is not on `<body>` after a mini-calendar click.
+- [x] **26. Month cells fit their content and chips are 24px (Patch B)**: rows are at least 136px on desktop (56px on phones) through a `--weeks` CSS variable, and the chip line-height is 22px.
+  - AC: at 1280×720 the busy day's "+N more" is fully visible, and chips are at least 24px tall.
+- [x] **27. The overlay sidebar behaves like a pop-up (Patch C)**: `main` is `inert` while the sidebar is open below 900px, and focus returns to the menu button when it closes.
+  - AC: with the overlay open, `#main.inert` is true. After closing, focus is on the menu button.
+- [x] **28. Reflow at 320px (Patch D)**: the period title wraps to its own line at 380px and below.
+  - AC: the full "Nov 2026" shows at 320px.
+- [x] **29. Windows high-contrast support (Patch E)**: `forced-colors` rules for today, the selected day, event borders and colour dots.
+  - AC: the CSS is present. Not tested on a real Windows high-contrast theme.
+- [x] **30. Quieter live region (Patch F)**: the period title is updated only when its text changes.
+  - AC: a redraw that doesn't change the period makes 0 changes to the title.
+- [x] **31. README refresh**: the `docs-helper` agent rewrites `README.md` as a simple beginner guide. Check it against the app.
+  - AC: setup, how to use, features and an example usage section are all present, and every claim matches the code.
+- [x] **32. Verify and ship**: rerun the 35 interaction checks and the a11y probe, screenshot at 320px, add a review section, commit and push.
+
+## Phase 4 Review
+
+**Changes**
+- `app.js`:
+  - New `rove()` helper: each grid (the main-view date buttons and the mini calendar) has a single tab stop, and the arrow keys move inside it.
+  - The mini calendar gets ←→↑↓ keys that flip the month at the edges. It keeps focus after a click; on the overlay sidebar, focus moves to that day in the main view instead.
+  - "selected" is added to the mini calendar's selected day name.
+  - `aria-haspopup="dialog"` is set on date buttons, chips, event blocks and "+N more".
+  - Month rows are sized by the `--weeks` CSS variable.
+  - `setSidebar()` makes `main` inert while the overlay is open and returns focus to the menu button when it closes.
+  - New `setPeriodTitle()` writes the live title only when its text changes.
+- `index.html`: a "Skip to calendar" link, `tabindex="-1"` on `main`, `aria-haspopup` on **Create**, and the Title `maxlength` changed from 200 to **100** to match the validation rule.
+- `styles.css`:
+  - Skip-link styles, chip line-height 22px (24px targets), month rows at least 136px (56px on phones).
+  - A 380px rule so the title wraps to its own line, and `forced-colors` rules.
+  - The overlay sidebar now becomes visible instantly on open. This fixes a Phase 3 bug where focus couldn't move into it.
+- `README.md`: rewritten by the new `docs-helper` agent (`.claude/agents/docs-helper.md`) as a beginner guide (intro, Features, Setup, How to use, Example usage, Tips, Project files). I checked it against the code and added two tips for the Phase 4 keyboard features.
+
+**Verified** (headless Edge)
+
+| Check | Before | After |
+|---|---|---|
+| Tab stops before the calendar | 53 | **12** (5 top bar + Create + 2 mini arrows + 1 mini day + 3 checkboxes). The skip link jumps past them. |
+| Mini-calendar tab stops | 42 | **1** |
+| Month-view tab stops | 43 | **9** |
+| Focus after a mini-calendar click | `<body>` | the selected mini day; on the overlay, that day in the main view |
+| Busy month cell at 1280×720 | 121px content in a 103px box, "+N more" hidden | 135 in 135, visible |
+| Chip height | 20px | 24px |
+| Title changes on a redraw with no new period | 1 | 0 |
+| Overlay sidebar: `main` inert / focus moves in / Esc returns focus | no / no / – | yes / yes / yes |
+| Title at 320px | "Nov 2…" | "Nov 2026" on its own line |
+
+- The 35 interaction checks still pass (35/35).
+- **AC note**: todo 25's target of "10 or fewer tab stops" was my own miscount. The result is 12. All 12 are real controls, and the skip link reaches the calendar with one Tab.
+- **Not tested**: a real Windows high-contrast theme (the `forced-colors` CSS was only reviewed), real screen readers, and real phones.
+
