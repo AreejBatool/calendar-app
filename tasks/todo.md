@@ -114,7 +114,7 @@ The reference is a Google-Calendar-style layout. We copy the **layout and visual
   - Colour tokens with measured contrast.
   - The layout and sidebar, the week grid (hour lines drawn as a repeating gradient, `--hour: 48px`), event blocks, the current-time line, chips and the month grid.
   - Breakpoints: 900px (sidebar slides in over the page, with a dimmed backdrop) and 600px (compact top bar, dots in month view, bottom-sheet pop-ups).
-- `app.js` (rewritten, about 560 lines):
+- `app.js` (rewritten, about 660 lines):
   - `renderWeek()` and `layoutDay()` (overlapping events grouped and given side-by-side columns), `updateNowLine()` (every minute), `renderMonth()` (4–6 weeks as needed).
   - `renderMini()`, `renderCalList()` and the `CALENDARS` list. `calOf()` treats old events as Personal.
   - `showDialog()` / `hideDialog()` make the page behind `inert` and put focus back afterwards. The grid is rebuilt *before* a pop-up closes, so focus lands on the new button.
