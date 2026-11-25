@@ -1,0 +1,186 @@
+:root {
+  --bg: #f7f7f9;
+  --surface: #fff;
+  --text: #1f2330;
+  --muted: #9aa0ad;
+  --border: #e2e4ea;
+  --accent: #3b6ef5;
+  --danger: #d64545;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button {
+  font: inherit;
+  padding: 8px 14px;
+  min-height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  cursor: pointer;
+}
+button:hover { border-color: var(--muted); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  flex-wrap: wrap;
+}
+.toolbar h1 { flex: 1; margin: 0; font-size: 1.4rem; }
+.nav { display: flex; gap: 6px; }
+
+/* Grid */
+main { padding: 0 16px 16px; }
+.weekdays, .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.weekdays div {
+  padding: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+}
+.weekdays .short { display: none; }
+.grid {
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+}
+.cell {
+  min-height: 110px;
+  padding: 4px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  overflow: hidden;
+}
+.cell:hover { background: #f1f4fe; }
+.cell.other { background: #fafafb; }
+.cell.other .day-num { color: var(--muted); }
+.day-num {
+  display: inline-block;
+  min-width: 24px;
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+  font-size: 0.85rem;
+  border-radius: 50%;
+}
+.cell.today .day-num { background: var(--accent); color: #fff; }
+
+.chip {
+  display: block;
+  margin-top: 2px;
+  padding: 2px 6px;
+  font-size: 0.78rem;
+  border-radius: 4px;
+  background: #e6edff;
+  color: #1d3fa8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chip:hover { background: #d3e0ff; }
+.more {
+  display: block;
+  min-height: 0;
+  margin-top: 2px;
+  padding: 2px 6px;
+  border: none;
+  background: none;
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+.more:hover { text-decoration: underline; }
+
+/* Day-events panel */
+.day-list { list-style: none; margin: 0 0 8px; padding: 0; }
+.day-list li { border-bottom: 1px solid var(--border); }
+.day-list button {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  border: none;
+  border-radius: 0;
+  text-align: left;
+}
+.day-list button:hover { background: #f1f4fe; }
+.day-list .time { flex: none; width: 92px; color: var(--muted); font-size: 0.85rem; }
+.day-list .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.day-list .empty { padding: 12px 0; color: var(--muted); }
+
+/* Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 20, 35, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.modal[hidden] { display: none; }
+.modal-box {
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 20px;
+  width: 100%;
+  max-width: 420px;
+  max-height: 100%;
+  overflow-y: auto;
+}
+.modal-box h2 { margin: 0 0 12px; font-size: 1.2rem; }
+form label { display: block; margin-bottom: 10px; font-size: 0.85rem; font-weight: 600; }
+form input, form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px;
+  font: inherit;
+  font-weight: normal;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+form .invalid { border-color: var(--danger); }
+.row { display: flex; gap: 10px; }
+.row label { flex: 1; }
+.error { display: block; color: var(--danger); font-size: 0.78rem; font-weight: normal; min-height: 1em; }
+.actions { display: flex; gap: 8px; margin-top: 8px; }
+.spacer { flex: 1; }
+
+/* Responsive: small screens */
+@media (max-width: 600px) {
+  .toolbar h1 { order: -1; flex-basis: 100%; font-size: 1.2rem; }
+  .toolbar #addBtn { margin-left: auto; }
+  main { padding: 0 4px 8px; }
+  .weekdays .long { display: none; }
+  .weekdays .short { display: inline; }
+  .cell { min-height: 56px; padding: 2px; text-align: center; }
+  .chip {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    margin: 1px;
+    border-radius: 50%;
+    background: var(--accent);
+    font-size: 0;
+    pointer-events: none; /* tap goes to the cell, which opens the day panel */
+  }
+  .more { padding: 0; font-size: 0.65rem; pointer-events: none; }
+  .modal { padding: 0; align-items: flex-end; }
+  .modal-box { max-width: none; border-radius: 10px 10px 0 0; }
+}

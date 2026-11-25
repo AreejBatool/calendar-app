@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calendar</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="toolbar">
+    <div class="nav">
+      <button id="prevBtn" aria-label="Previous month">&#8249;</button>
+      <button id="todayBtn">Today</button>
+      <button id="nextBtn" aria-label="Next month">&#8250;</button>
+    </div>
+    <h1 id="monthTitle"></h1>
+    <button id="addBtn" class="primary">+ Add event</button>
+  </header>
+
+  <main>
+    <div id="weekdays" class="weekdays"></div>
+    <div id="grid" class="grid"></div>
+  </main>
+
+  <div id="modal" class="modal" hidden>
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 id="modalTitle">Add event</h2>
+      <form id="eventForm" novalidate>
+        <label>Title
+          <input id="fTitle" type="text" maxlength="200">
+          <span class="error" data-for="title"></span>
+        </label>
+        <label>Date
+          <input id="fDate" type="date">
+          <span class="error" data-for="date"></span>
+        </label>
+        <div class="row">
+          <label>Start
+            <input id="fStart" type="time">
+          </label>
+          <label>End
+            <input id="fEnd" type="time">
+          </label>
+        </div>
+        <span class="error" data-for="time"></span>
+        <label>Description
+          <textarea id="fDesc" rows="3"></textarea>
+        </label>
+        <div class="actions">
+          <button type="button" id="deleteBtn" class="danger" hidden>Delete</button>
+          <span class="spacer"></span>
+          <button type="button" id="cancelBtn">Cancel</button>
+          <button type="submit" class="primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="dayModal" class="modal" hidden>
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="dayTitle">
+      <h2 id="dayTitle"></h2>
+      <ul id="dayList" class="day-list"></ul>
+      <div class="actions">
+        <span class="spacer"></span>
+        <button type="button" id="dayCloseBtn">Close</button>
+        <button type="button" id="dayAddBtn" class="primary">+ Add event</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
